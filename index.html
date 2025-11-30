@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula Virtual BPM: Prevención de ETA</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #27ae60;
+            --accent: #e67e22;
+            --light: #ecf0f1;
+            --danger: #c0392b;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        h1, h2 { text-align: center; color: var(--primary); }
+        .intro-text { text-align: center; margin-bottom: 30px; font-style: italic; }
+        
+        /* Menu Styles */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .game-card {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s;
+            border: 2px solid transparent;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary);
+            background: #fff;
+        }
+        .icon { font-size: 3rem; margin-bottom: 10px; display: block; }
+        
+        /* Game Section Styles */
+        .game-section { display: none; }
+        .active { display: block; animation: fadeIn 0.5s; }
+        
+        .question-box {
+            background: #e8f6f3;
+            padding: 20px;
+            border-left: 5px solid var(--secondary);
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .options-grid {
+            display: grid;
+            gap: 10px;
+        }
+        button.option-btn {
+            padding: 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        button.option-btn:hover { background: var(--light); }
+        
+        /* Feedback Styles */
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .correct { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .incorrect { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        /* Navigation Buttons */
+        .nav-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .back-btn { background-color: #95a5a6; }
+        
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: var(--secondary);
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.3s;
+        }
+
+        /* Specific Styles for Temp Game */
+        .temp-matcher {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .source-cite {
+            font-size: 0.8em;
+            color: #666;
+            display: block;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="main-menu">
+        <h1>🛡️ Módulo de Capacitación BPM</h1>
+        <p class="intro-text">Prevención de Enfermedades Transmitidas por Alimentos (ETA)</p>
+        <p>Selecciona una actividad para poner a prueba tus conocimientos:</p>
+        
+        <div class="menu-grid">
+            <div class="game-card" onclick="startGame('quiz')">
+                <span class="icon">🧠</span>
+                <h3>Trivia Maestra</h3>
+                <p>Conceptos básicos y datos clave sobre las ETA.</p>
+            </div>
+            <div class="game-card" onclick="startGame('decision')">
+                <span class="icon">🧼</span>
+                <h3>Higiene y Riesgos</h3>
+                <p>Toma la decisión correcta: Reglas de Oro.</p>
+            </div>
+            <div class="game-card" onclick="startGame('temp')">
+                <span class="icon">🌡️</span>
+                <h3>Control de Temperatura</h3>
+                <p>Asigna la temperatura correcta de cocción.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-quiz" class="game-section">
+        <h2>🧠 Trivia Maestra: Conceptos ETA</h2>
+        <div class="progress-container"><div class="progress-bar" id="quiz-progress"></div></div>
+        <div id="quiz-container">
+            </div>
+        <button class="nav-btn back-btn" onclick="showMenu()">Volver al Menú</button>
+    </div>
+
+    <div id="game-decision" class="game-section">
+        <h2>🧼 Higiene y Contaminación Cruzada</h2>
+        <div class="progress-container"><div class="progress-bar" id="decision-progress"></div></div>
+        <div id="decision-container">
+            </div>
+        <button class="nav-btn back-btn" onclick="showMenu()">Volver al Menú</button>
+    </div>
+
+    <div id="game-temp" class="game-section">
+        <h2>🌡️ Desafío de Temperaturas</h2>
+        <p>Selecciona la temperatura interna segura mínima para cada alimento según el módulo.</p>
+        <div id="temp-container">
+            </div>
+        <div id="temp-feedback" class="feedback"></div>
+        <button class="nav-btn" onclick="checkTempGame()">Verificar Respuestas</button>
+        <button class="nav-btn back-btn" onclick="showMenu()">Volver al Menú</button>
+    </div>
+
+</div>
+
+<script>
+    // --- DATA SOURCE (Based on provided text) ---
+    const quizData = [
+        {
+            q: "¿Cuáles fueron los alimentos más implicados en brotes de ETA en Colombia en 2018?",
+            options: ["Carne de res y cerdo", "Pollo, queso y arroz", "Pescados y mariscos"],
+            answer: 1,
+            feedback: "Correcto. El pollo (24.4%), el queso (22.2%) y el arroz (21.9%) fueron los principales causantes.",
+            cite: ""
+        },
+        {
+            q: "¿Cuál es la diferencia entre infección e intoxicación alimentaria?",
+            options: ["La infección es por químicos y la intoxicación por virus", "La infección requiere ingerir el microorganismo vivo; la intoxicación es por toxinas preformadas", "No hay diferencia, son lo mismo"],
+            answer: 1,
+            feedback: "Exacto. La infección implica la multiplicación del patógeno en el cuerpo, mientras que la intoxicación es por ingerir venenos ya presentes.",
+            cite: ""
+        },
+        {
+            q: "¿Cuál es el tiempo mínimo recomendado para el lavado de manos?",
+            options: ["10 segundos", "20 segundos", "1 minuto"],
+            answer: 1,
+            feedback: "Correcto. Se debe usar agua y jabón desinfectante durante al menos 20 segundos.",
+            cite: ""
+        }
+    ];
+
+    const decisionData = [
+        {
+            scenario: "Estás preparando una ensalada y acabas de cortar pollo crudo. ¿Qué debes hacer con la tabla?",
+            options: ["Limpiarla con un trapo seco", "Usar el otro lado de la tabla", "Lavar y desinfectar la superficie antes de usarla"],
+            answer: 2,
+            feedback: "¡Bien! Debes limpiar y desinfectar superficies antes y después de cada uso para evitar contaminación cruzada indirecta.",
+            cite: "[cite: 44]"
+        },
+        {
+            scenario: "Vas a cocinar un pollo entero. ¿Debes lavarlo en el fregadero antes de cocinarlo?",
+            options: ["Sí, para quitar bacterias superficiales", "No, nunca se debe lavar"],
+            answer: 1,
+            feedback: "Correcto. NO laves el pollo. Esto propaga microbios por salpicaduras a otras superficies (contaminación cruzada).",
+            cite: ""
+        },
+        {
+            scenario: "Tienes sobras de comida caliente. ¿Cuánto tiempo máximo pueden estar a temperatura ambiente?",
+            options: ["Hasta que se enfríen totalmente (4-5 horas)", "Máximo 2 horas"],
+            answer: 1,
+            feedback: "Correcto. No deje alimentos cocidos a temperatura ambiente por más de 2 horas.",
+            cite: ""
+        }
+    ];
+
+    const tempData = [
+        { item: "Carne Molida (Res/Cerdo)", correct: "160°F", options: ["145°F", "160°F", "130°F"], cite: "" },
+        { item: "Aves (Pollo/Pavo)", correct: "165°F", options: ["150°F", "165°F", "145°F"], cite: "" },
+        { item: "Cortes enteros (Res/Cerdo)", correct: "145°F", options: ["145°F", "165°F", "100°F"], cite: "" },
+        { item: "Cocción general (Masa del alimento)", correct: "70°C", options: ["50°C", "70°C", "90°C"], cite: "" }
+    ];
+
+    // --- STATE MANAGEMENT ---
+    let currentQuizIndex = 0;
+    let currentDecisionIndex = 0;
+
+    // --- FUNCTIONS ---
+
+    function showMenu() {
+        document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('main-menu').style.display = 'block';
+        resetGames();
+    }
+
+    function startGame(gameType) {
+        document.getElementById('main-menu').style.display = 'none';
+        document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active'));
+        
+        if (gameType === 'quiz') {
+            document.getElementById('game-quiz').classList.add('active');
+            renderQuiz();
+        } else if (gameType === 'decision') {
+            document.getElementById('game-decision').classList.add('active');
+            renderDecision();
+        } else if (gameType === 'temp') {
+            document.getElementById('game-temp').classList.add('active');
+            renderTempGame();
+        }
+    }
+
+    function resetGames() {
+        currentQuizIndex = 0;
+        currentDecisionIndex = 0;
+        document.getElementById('temp-feedback').style.display = 'none';
+    }
+
+    // --- GAME 1: QUIZ ENGINE ---
+    function renderQuiz() {
+        const container = document.getElementById('quiz-container');
+        const progress = document.getElementById('quiz-progress');
+        
+        if (currentQuizIndex >= quizData.length) {
+            container.innerHTML = `<div class="question-box"><h3>¡Felicidades!</h3><p>Has completado la trivia básica de ETA.</p></div>`;
+            return;
+        }
+
+        const data = quizData[currentQuizIndex];
+        progress.style.width = ((currentQuizIndex) / quizData.length * 100) + '%';
+
+        let html = `
+            <div class="question-box">
+                <p><strong>Pregunta ${currentQuizIndex + 1}:</strong> ${data.q}</p>
+            </div>
+            <div class="options-grid">
+        `;
+
+        data.options.forEach((opt, index) => {
+            html += `<button class="option-btn" onclick="checkQuiz(${index})">${opt}</button>`;
+        });
+
+        html += `</div><div id="q-feedback" class="feedback"></div>`;
+        container.innerHTML = html;
+    }
+
+    function checkQuiz(selectedIndex) {
+        const data = quizData[currentQuizIndex];
+        const feedbackEl = document.getElementById('q-feedback');
+        const btns = document.querySelectorAll('#quiz-container .option-btn');
+        
+        btns.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === data.answer) {
+            feedbackEl.className = "feedback correct";
+            feedbackEl.innerHTML = `<strong>¡Correcto!</strong> ${data.feedback}`;
+            feedbackEl.style.display = 'block';
+            setTimeout(() => {
+                currentQuizIndex++;
+                renderQuiz();
+            }, 3500);
+        } else {
+            feedbackEl.className = "feedback incorrect";
+            feedbackEl.innerHTML = `<strong>Incorrecto.</strong> Intenta recordar: ${data.feedback}`;
+            feedbackEl.style.display = 'block';
+            // Allow retry or move on? Let's move on for flow
+            setTimeout(() => {
+                currentQuizIndex++;
+                renderQuiz();
+            }, 3500);
+        }
+    }
+
+    // --- GAME 2: DECISION ENGINE ---
+    function renderDecision() {
+        const container = document.getElementById('decision-container');
+        const progress = document.getElementById('decision-progress');
+        
+        if (currentDecisionIndex >= decisionData.length) {
+            container.innerHTML = `<div class="question-box"><h3>¡Excelente!</h3><p>Has demostrado buenas prácticas de higiene.</p></div>`;
+            return;
+        }
+
+        const data = decisionData[currentDecisionIndex];
+        progress.style.width = ((currentDecisionIndex) / decisionData.length * 100) + '%';
+
+        let html = `
+            <div class="question-box">
+                <p><strong>Situación:</strong> ${data.scenario}</p>
+            </div>
+            <div class="options-grid">
+        `;
+
+        data.options.forEach((opt, index) => {
+            html += `<button class="option-btn" onclick="checkDecision(${index})">${opt}</button>`;
+        });
+
+        html += `</div><div id="d-feedback" class="feedback"></div>`;
+        container.innerHTML = html;
+    }
+
+    function checkDecision(selectedIndex) {
+        const data = decisionData[currentDecisionIndex];
+        const feedbackEl = document.getElementById('d-feedback');
+        const btns = document.querySelectorAll('#decision-container .option-btn');
+        
+        btns.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === data.answer) {
+            feedbackEl.className = "feedback correct";
+            feedbackEl.innerHTML = `<strong>¡Bien hecho!</strong> ${data.feedback}`;
+            feedbackEl.style.display = 'block';
+            setTimeout(() => {
+                currentDecisionIndex++;
+                renderDecision();
+            }, 3500);
+        } else {
+            feedbackEl.className = "feedback incorrect";
+            feedbackEl.innerHTML = `<strong>Peligro.</strong> ${data.feedback}`;
+            feedbackEl.style.display = 'block';
+            setTimeout(() => {
+                currentDecisionIndex++;
+                renderDecision();
+            }, 3500);
+        }
+    }
+
+    // --- GAME 3: TEMP ENGINE ---
+    function renderTempGame() {
+        const container = document.getElementById('temp-container');
+        let html = '';
+        
+        tempData.forEach((item, index) => {
+            let optionsHtml = `<select id="temp-select-${index}" style="padding:5px; border-radius:5px;">
+                <option value="">Seleccionar...</option>`;
+            
+            // Randomize options strictly for display if needed, but keeping simple here
+            item.options.forEach(opt => {
+                optionsHtml += `<option value="${opt}">${opt}</option>`;
+            });
+            optionsHtml += `</select>`;
+
+            html += `
+                <div class="temp-matcher">
+                    <strong>${item.item}</strong>
+                    ${optionsHtml}
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        document.getElementById('temp-feedback').style.display = 'none';
+    }
+
+    function checkTempGame() {
+        let score = 0;
+        let details = "";
+        
+        tempData.forEach((item, index) => {
+            const select = document.getElementById(`temp-select-${index}`);
+            if (select.value === item.correct) {
+                score++;
+                select.style.border = "2px solid green";
+                select.style.backgroundColor = "#d4edda";
+            } else {
+                select.style.border = "2px solid red";
+                select.style.backgroundColor = "#f8d7da";
+                details += `<br>• ${item.item}: Debe ser <b>${item.correct}</b> ${item.cite}`;
+            }
+        });
+
+        const feedbackEl = document.getElementById('temp-feedback');
+        feedbackEl.style.display = 'block';
+        
+        if (score === tempData.length) {
+            feedbackEl.className = "feedback correct";
+            feedbackEl.innerHTML = "<strong>¡Perfecto!</strong> Conoces todas las temperaturas críticas de seguridad.";
+        } else {
+            feedbackEl.className = "feedback incorrect";
+            feedbackEl.innerHTML = `<strong>Tienes ${score}/${tempData.length} aciertos.</strong> Revisa lo siguiente:${details}`;
+        }
+    }
+
+</script>
+
+</body>
+</html>
