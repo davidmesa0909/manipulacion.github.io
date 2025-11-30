@@ -1,0 +1,6 @@
+# Archivos del sistema operativo que no queremos en el repo
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
+.vscode/
